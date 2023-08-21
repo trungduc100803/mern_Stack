@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"path": "../../../../java/lab9"
+		},
+		{
+			"path": "../../../../java/lab10"
+		},
+		{
+			"path": "../../../restAPI"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "zingMp3__deploy"
+	}
+}
