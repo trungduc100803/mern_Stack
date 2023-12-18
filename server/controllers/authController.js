@@ -1,4 +1,4 @@
-const { authModel, refreshTokenModel } = require('../models/index')
+const { authModel, refreshTokenModel, userModel } = require('../models/index')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
@@ -10,7 +10,7 @@ const authController = {
                 user
             },
             process.env.ACCESS_KEY_JWT,
-            { expiresIn: '2m' }
+            { expiresIn: '15s' }
         )
 
         return accessToken
@@ -21,8 +21,7 @@ const authController = {
             {
                 user
             },
-            process.env.REFRESH_KEY_TOKEN,
-            // { expiresIn: '7d' }
+            process.env.REFRESH_KEY_TOKEN
         )
 
         return refrehToken
@@ -50,14 +49,26 @@ const authController = {
 
             if (auth) return res.status(403).json("Tên đăng nhập đã tồn tại")
 
-            const newUser = await new authModel({
+
+            const newAuth = await new authModel({
                 userName: req.body.userName.trim(),
                 email: req.body.email.trim(),
                 password: hash
             })
 
-            const savedUser = await newUser.save()
-            res.status(200).json(savedUser)
+            const savedAuth = await newAuth.save()
+
+            const newuser = await new userModel({
+                name: req.body.userName.trim(),
+                avatar: "",
+                coverImg: "",
+                userID: savedAuth._id
+            })
+            const saveUser = await newuser.save()
+            res.status(200).json({
+                auth: savedAuth,
+                user: saveUser
+            })
         } catch (error) {
             res.status(500).json(next)
         }
@@ -81,17 +92,14 @@ const authController = {
                 const accessToken = authController.generateAccessToken(user)
                 const refreshToken = authController.generateRefreshToken(user)
 
-                // res.cookie('refreshToken', refreshToken, {
-                //     httpOnly: true,
-                //     secure: false,
-                //     path:'/',
-                //     sameSite: 'strict'
-                // })
+                // res.cookie('token', accessToken, { httpOnly: true })
+
                 const newRefreshToken = new refreshTokenModel({ refreshToken })
                 const saveRefreshToken = await newRefreshToken.save()
                 //loai bo password de bao mat
                 const { password, ...other } = user._doc
-                return res.status(200).json({ ...other, accessToken, refreshToken: saveRefreshToken.refreshToken })
+                const userinfo = await userModel.findOne({ userID: user._id })
+                return res.status(200).json({ ...other, accessToken, userinfo, photo: userinfo.avatar.data, refreshToken: saveRefreshToken.refreshToken })
             }
         } catch (error) {
             res.status(500).json(next)
@@ -121,7 +129,6 @@ const authController = {
 
     //logOut
     logOut: async (req, res) => {
-        console.log(req.body.token)
         await refreshTokenModel.deleteOne({ refreshToken: req.body.token })
         res.status(200).json("tc")
     }

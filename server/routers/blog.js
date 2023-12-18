@@ -11,6 +11,15 @@ router.get('/:id', blogController.getABlog)
 //add a blog
 router.post('/', blogController.addABlog)
 
+//like blog
+router.post('/likeBlog', blogController.likeBlog)
+
+//cancelLikeBlog
+router.post('/cancelLikeBlog', blogController.cancelLikeBlog)
+
+//addComment
+router.post('/addComment', blogController.addCommentBlog)
+
 
 module.exports = router
 
